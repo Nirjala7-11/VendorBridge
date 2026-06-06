@@ -1,15 +1,8 @@
-// ---------------------------------------------------------------------------
-// 1. SUPABASE CLIENT INITIALIZATION
-// ---------------------------------------------------------------------------
 const SUPABASE_URL = 'https://obcslpgrfkjsiqsmnegl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jVeWA30bIzvr6bkLUnGiQA_n6HAwr7i';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ---------------------------------------------------------------------------
-// 2. SESSION HELPERS
-// ---------------------------------------------------------------------------
 
 function getSession() {
     try {
@@ -39,10 +32,6 @@ function requireAuth() {
     return session;
 }
 
-// ---------------------------------------------------------------------------
-// 3. IMMUTABLE AUDIT LOG ENGINE  (INSERT only — no edit, no delete)
-// ---------------------------------------------------------------------------
-
 async function logAction(action, status = 'Success') {
     const session = getSession();
     const actor = session
@@ -57,10 +46,6 @@ async function logAction(action, status = 'Success') {
 
     if (error) console.error('[AuditLog] Insert failed:', error.message);
 }
-
-// ---------------------------------------------------------------------------
-// 4. AUTH — toggleAuth  (handles login / register / forgot)
-// ---------------------------------------------------------------------------
 
 function toggleAuth(view) {
     // Hide all three sections first
@@ -81,13 +66,8 @@ function toggleAuth(view) {
     // Always reset forgot flow when opening it
     if (view === 'forgot') resetForgotSteps();
 }
-
-// ---------------------------------------------------------------------------
-// 5. AUTH — Login
-// ---------------------------------------------------------------------------
-
 async function handleLogin() {
-    const email    = document.getElementById('login-username')?.value.trim();
+    const email    = document.getElementById('login-username')?.value.trim().toLowerCase();
     const password = document.getElementById('login-password')?.value;
 
     if (!email || !password) {
@@ -95,32 +75,36 @@ async function handleLogin() {
         return;
     }
 
+    // Use array result (no .single()) so missing rows return [] not an error
     const { data, error } = await db
         .from('users')
         .select('*')
         .eq('email', email)
         .eq('password_hash', password)
-        .single();
+        .limit(1);
 
-    if (error || !data) {
+    if (error) {
+        alert('A network error occurred. Please try again.');
+        console.error('[Login] DB error:', error.message);
+        return;
+    }
+
+    if (!data || data.length === 0) {
         alert('Invalid email or password. Please try again.');
         await logAction(`Failed login attempt: ${email}`, 'Failed');
         return;
     }
 
-    setSession(data);
-    await logAction(`User logged in: ${data.firstname} ${data.lastname}`, 'Success');
+    const user = data[0];
+    setSession(user);
+    await logAction(`User logged in: ${user.firstname} ${user.lastname}`, 'Success');
     window.location.href = 'dashboard.html';
 }
-
-// ---------------------------------------------------------------------------
-// 6. AUTH — Register
-// ---------------------------------------------------------------------------
 
 async function handleRegister() {
     const firstname   = document.getElementById('reg-firstname')?.value.trim();
     const lastname    = document.getElementById('reg-lastname')?.value.trim();
-    const email       = document.getElementById('reg-email')?.value.trim();
+    const email       = document.getElementById('reg-email')?.value.trim().toLowerCase();
     const phone       = document.getElementById('reg-phone')?.value.trim();
     const role        = document.getElementById('reg-role')?.value;
     const country     = document.getElementById('reg-country')?.value.trim();
@@ -128,8 +112,13 @@ async function handleRegister() {
     const password    = document.getElementById('reg-password')?.value;
     const confirmPass = document.getElementById('reg-confirm-password')?.value;
 
-    if (!firstname || !lastname || !email || !phone || !role || !country || !password) {
+    // Field validation
+    if (!firstname || !lastname || !email || !phone || !country || !password) {
         alert('Please fill in all required fields.');
+        return;
+    }
+    if (!role) {
+        alert('Please select a role.');
         return;
     }
     if (password.length < 6) {
@@ -141,18 +130,25 @@ async function handleRegister() {
         return;
     }
 
-    // Check if email already exists
-    const { data: existing } = await db
+    // Check duplicate email — use array NOT .single() to avoid false errors
+    const { data: existingList, error: checkError } = await db
         .from('users')
         .select('id')
         .eq('email', email)
-        .single();
+        .limit(1);
 
-    if (existing) {
-        alert('An account with this email already exists.');
+    if (checkError) {
+        alert('Could not verify email. Please try again.');
+        console.error('[Register] Duplicate check error:', checkError.message);
         return;
     }
 
+    if (existingList && existingList.length > 0) {
+        alert('An account with this email already exists. Please log in instead.');
+        return;
+    }
+
+    // Insert new user
     const { data, error } = await db.from('users').insert([{
         firstname,
         lastname,
@@ -160,24 +156,30 @@ async function handleRegister() {
         phone,
         role,
         country,
-        additional_info: additional,
+        additional_info: additional || '',
         password_hash:   password,
         status:          'Active'
     }]).select().single();
 
     if (error) {
         alert('Registration failed: ' + error.message);
+        console.error('[Register] Insert error:', error);
         return;
     }
 
     await logAction(`New user registered: ${firstname} ${lastname} as ${role}`, 'Success');
-    alert(`Registration successful! Welcome, ${firstname}. Please log in.`);
+    alert(`Registration successful! Welcome, ${firstname}.\n\nPlease log in with your credentials.`);
+
+    // Clear register form
+    ['reg-firstname','reg-lastname','reg-email','reg-phone','reg-country',
+     'reg-password','reg-confirm-password','reg-additional'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('reg-role').selectedIndex = 0;
+
     toggleAuth('login');
 }
-
-// ---------------------------------------------------------------------------
-// 7. AUTH — Logout
-// ---------------------------------------------------------------------------
 
 async function logout() {
     const session = getSession();
@@ -187,10 +189,6 @@ async function logout() {
     clearSession();
     window.location.href = 'index.html';
 }
-
-// ---------------------------------------------------------------------------
-// 8. FORGOT PASSWORD FLOW
-// ---------------------------------------------------------------------------
 
 let otpTimerInterval = null;
 let generatedOTP     = null;
@@ -228,14 +226,20 @@ async function sendOTP(isResend = false) {
         return;
     }
 
-    // Verify user exists in DB
+    // Use array (not .single()) to avoid false errors when email not found
     const { data, error } = await db
         .from('users')
         .select('id, firstname')
         .eq('email', email)
-        .single();
+        .limit(1);
 
-    if (error || !data) {
+    if (error) {
+        alert('A network error occurred. Please try again.');
+        console.error('[sendOTP] DB error:', error.message);
+        return;
+    }
+
+    if (!data || data.length === 0) {
         alert('No account found with that email address. Please check and try again.');
         return;
     }
@@ -364,22 +368,14 @@ async function resetPassword() {
     await db.from('password_resets').delete().eq('email', forgotUserEmail);
     await logAction(`Password successfully reset for: ${forgotUserEmail}`, 'Success');
 
-    alert('Password updated successfully!\n\nPlease log in with your new password.');
+    alert(' Password updated successfully!\n\nPlease log in with your new password.');
     resetForgotSteps();
     toggleAuth('login');
 }
 
-// ---------------------------------------------------------------------------
-// 9. NAVIGATION
-// ---------------------------------------------------------------------------
-
 function routeTo(page) {
     window.location.href = page;
 }
-
-// ---------------------------------------------------------------------------
-// 10. VENDOR MANAGEMENT
-// ---------------------------------------------------------------------------
 
 let vendorFilterState = 'All';
 
@@ -453,10 +449,6 @@ async function updateVendorStatus(id, newStatus) {
 
 function filterVendors(filter) { loadVendors(filter); }
 
-// ---------------------------------------------------------------------------
-// 11. RFQ MODULE
-// ---------------------------------------------------------------------------
-
 let rfqLineItemCount = 0;
 
 function addRFQLineItem() {
@@ -517,10 +509,6 @@ async function saveRFQ(statusValue) {
     if (statusValue === 'Open') routeTo('quotations.html');
 }
 
-// ---------------------------------------------------------------------------
-// 12. QUOTATIONS MODULE
-// ---------------------------------------------------------------------------
-
 function calculateQuoteTotals() {
     let subtotal = 0;
     document.querySelectorAll('#quoteItemTableBody tr').forEach(row => {
@@ -569,10 +557,6 @@ async function submitQuotation(statusValue) {
     if (statusValue !== 'Draft') routeTo('approvals.html');
 }
 
-// ---------------------------------------------------------------------------
-// 13. APPROVALS MODULE
-// ---------------------------------------------------------------------------
-
 async function processApprovalStage(decision, approverRole) {
     const remarks = document.getElementById('approvalRemarks')?.value.trim();
     if (!remarks) { alert('Please enter audit remarks before proceeding.'); return; }
@@ -600,10 +584,6 @@ async function processApprovalStage(decision, approverRole) {
         routeTo('rfqs.html');
     }
 }
-
-// ---------------------------------------------------------------------------
-// 14. ACTIVITY / AUDIT LOG MODULE  (read-only display)
-// ---------------------------------------------------------------------------
 
 const LOG_FILTER_MAP = {
     'All': null, 'RFQ': 'RFQ', 'Approved': 'Approved',
@@ -648,10 +628,6 @@ function filterLogs(filter, btn) {
     if (btn) btn.classList.remove('btn-secondary');
     renderActivityModule(filter);
 }
-
-// ---------------------------------------------------------------------------
-// 15. REPORTS & ANALYTICS
-// ---------------------------------------------------------------------------
 
 let spendChart, trendChartInstance, dashTrendChart;
 
@@ -770,10 +746,6 @@ function exportProcurementReport() {
     logAction(`Procurement report exported for ${month}/${year}`, 'Success');
 }
 
-// ---------------------------------------------------------------------------
-// 16. UTILITY HELPERS
-// ---------------------------------------------------------------------------
-
 function escHtml(str) {
     if (str == null) return '—';
     return String(str)
@@ -801,10 +773,6 @@ function formatTimestamp(iso) {
     } catch { return iso; }
 }
 
-// ---------------------------------------------------------------------------
-// 17. PAGE BOOTSTRAP
-// ---------------------------------------------------------------------------
-
 document.addEventListener('DOMContentLoaded', () => {
     const page = window.location.pathname.split('/').pop();
 
@@ -822,7 +790,3 @@ document.addEventListener('DOMContentLoaded', () => {
         default: break;
     }
 });
-
-// ---------------------------------------------------------------------------
-// END OF app.js
-// ---------------------------------------------------------------------------
