@@ -1,13 +1,8 @@
 const SUPABASE_URL = 'https://obcslpgrfkjsiqsmnegl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jVeWA30bIzvr6bkLUnGiQA_n6HAwr7i';
-// NOTE: In production, never expose keys in source. Use server-side env vars.
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ---------------------------------------------------------------------------
-// 2. SESSION / AUTH HELPERS
-// ---------------------------------------------------------------------------
 
 function getSession() {
     try {
@@ -24,14 +19,13 @@ function clearSession() {
     sessionStorage.removeItem('vb_session');
 }
 
-/** Redirect to login if no active session (call on every protected page load). */
 function requireAuth() {
     const session = getSession();
     if (!session) {
         window.location.href = 'index.html';
         return null;
     }
-    // Populate welcome message on dashboard
+    
     const welcomeEl = document.getElementById('welcomeMessage');
     if (welcomeEl) {
         welcomeEl.textContent = `Welcome back, ${session.firstname} 👋`;
@@ -39,11 +33,6 @@ function requireAuth() {
     return session;
 }
 
-/**
- * Appends one immutable entry to the audit_logs table.
- * @param {string} action  - Human-readable description of what happened.
- * @param {string} status  - e.g. 'Success', 'Failed', 'Pending', 'Approved', 'Rejected'
- */
 async function logAction(action, status = 'Success') {
     const session = getSession();
     const actor = session
@@ -54,20 +43,14 @@ async function logAction(action, status = 'Success') {
         action_description: action,
         actor_profile:      actor,
         status:             status,
-        // created_at is set server-side by Supabase default (now()); never sent from client.
     };
 
     const { error } = await db.from('audit_logs').insert([entry]);
 
     if (error) {
-        // Log to console only — never surface internal errors to end-user in prod.
         console.error('[AuditLog] Insert failed:', error.message);
     }
 }
-
-// ---------------------------------------------------------------------------
-// 4. AUTHENTICATION
-// ---------------------------------------------------------------------------
 
 function toggleAuth(view) {
     const loginSection    = document.getElementById('login-section');
@@ -91,13 +74,12 @@ async function handleLogin() {
         alert('Please enter both username and email/password.');
         return;
     }
-
-    // Username is stored as email in the users table for simplicity.
+    
     const { data, error } = await db
         .from('users')
         .select('*')
         .eq('email', username)
-        .eq('password_hash', password) // In production use proper hashing (bcrypt etc.)
+        .eq('password_hash', password)
         .single();
 
     if (error || !data) {
@@ -135,7 +117,6 @@ async function handleRegister() {
         return;
     }
 
-    // Check if email already exists
     const { data: existing } = await db
         .from('users')
         .select('id')
@@ -155,7 +136,7 @@ async function handleRegister() {
         role,
         country,
         additional_info: additional,
-        password_hash: password, // Placeholder — implement proper auth in prod
+        password_hash: password,
         status: 'Active'
     }]).select().single();
 
@@ -178,17 +159,9 @@ async function logout() {
     window.location.href = 'index.html';
 }
 
-// ---------------------------------------------------------------------------
-// 5. NAVIGATION UTILITY
-// ---------------------------------------------------------------------------
-
 function routeTo(page) {
     window.location.href = page;
 }
-
-// ---------------------------------------------------------------------------
-// 6. VENDOR MANAGEMENT
-// ---------------------------------------------------------------------------
 
 let vendorFilterState = 'All';
 
@@ -278,10 +251,6 @@ function filterVendors(filter) {
     loadVendors(filter);
 }
 
-// ---------------------------------------------------------------------------
-// 7. RFQ MODULE
-// ---------------------------------------------------------------------------
-
 let rfqLineItemCount = 0;
 
 function addRFQLineItem() {
@@ -356,10 +325,6 @@ async function saveRFQ(statusValue) {
     if (statusValue === 'Open') routeTo('quotations.html');
 }
 
-// ---------------------------------------------------------------------------
-// 8. QUOTATIONS MODULE
-// ---------------------------------------------------------------------------
-
 function calculateQuoteTotals() {
     let subtotal = 0;
     document.querySelectorAll('#quoteItemTableBody tr').forEach(row => {
@@ -414,10 +379,6 @@ async function submitQuotation(statusValue) {
     if (statusValue !== 'Draft') routeTo('approvals.html');
 }
 
-// ---------------------------------------------------------------------------
-// 9. APPROVALS MODULE
-// ---------------------------------------------------------------------------
-
 async function processApprovalStage(decision, approverRole) {
     const remarks = document.getElementById('approvalRemarks')?.value.trim();
 
@@ -452,11 +413,6 @@ async function processApprovalStage(decision, approverRole) {
         routeTo('rfqs.html');
     }
 }
-
-// ---------------------------------------------------------------------------
-// 10. ACTIVITY & AUDIT LOGS MODULE
-// ---------------------------------------------------------------------------
-// READ-ONLY display. No edit/delete controls are rendered or available.
 
 let currentLogFilter = 'All';
 
@@ -523,7 +479,6 @@ async function renderActivityModule(filter) {
 }
 
 function filterLogs(filter, btn) {
-    // Swap active button styles
     document.querySelectorAll('.action-box .btn').forEach(b => b.classList.add('btn-secondary'));
     if (btn) btn.classList.remove('btn-secondary');
     renderActivityModule(filter);
@@ -539,10 +494,6 @@ function filterBtnLabel(filter) {
     };
     return map[filter] || filter;
 }
-
-// ---------------------------------------------------------------------------
-// 11. REPORTS & ANALYTICS MODULE
-// ---------------------------------------------------------------------------
 
 let spendChart, trendChartInstance, dashTrendChart;
 
@@ -716,11 +667,6 @@ function exportProcurementReport() {
     logAction(`Procurement report exported for ${month}/${year}`, 'Success');
 }
 
-// ---------------------------------------------------------------------------
-// 12. UTILITY HELPERS
-// ---------------------------------------------------------------------------
-
-/** Escape HTML to prevent XSS when rendering DB content. */
 function escHtml(str) {
     if (str == null) return '—';
     return String(str)
@@ -731,7 +677,6 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-/** Map a status string to a CSS color variable. */
 function statusColor(status) {
     const map = {
         'Active':   'var(--accent-green)',
@@ -746,7 +691,6 @@ function statusColor(status) {
     return map[status] || 'var(--text-muted)';
 }
 
-/** Format an ISO timestamp for display. */
 function formatTimestamp(iso) {
     if (!iso) return '—';
     try {
@@ -759,20 +703,14 @@ function formatTimestamp(iso) {
     } catch { return iso; }
 }
 
-// ---------------------------------------------------------------------------
-// 13. PAGE BOOTSTRAP — auto-run on every page
-// ---------------------------------------------------------------------------
-
 document.addEventListener('DOMContentLoaded', () => {
     const page = window.location.pathname.split('/').pop();
 
-    // Index/login page is always accessible
+
     if (page === 'index.html' || page === '') return;
 
-    // All other pages require an active session
     requireAuth();
 
-    // Page-specific initializations
     switch (page) {
         case 'dashboard.html':
             renderDashboardTrendChart();
@@ -783,11 +721,11 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
 
         case 'rfqs.html':
-            addRFQLineItem(); // Seed first line item
+            addRFQLineItem();
             break;
 
         case 'quotations.html':
-            calculateQuoteTotals(); // Set initial totals
+            calculateQuoteTotals();
             break;
 
         case 'activity.html':
