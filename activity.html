@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - VendorBridge</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">VendorBridge</div>
+        <ul class="nav-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="vendors.html">Vendors</a></li>
+            <li><a href="rfqs.html">RFQ's</a></li>
+            <li><a href="quotations.html">Quotations</a></li>
+            <li><a href="approvals.html">Approvals</a></li>
+            <li><a href="purchase_orders.html">Purchase Orders</a></li>
+            <li class="active"><a href="activity.html">Activity & Logs</a></li>
+            <li><a href="report.html">Reports & Analytics</a></li>
+            <li onclick="logout()" style="margin-top:50px; color:#ff5252; cursor:pointer; padding:12px 16px;">Logout</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Immutable Procurement Audit Logs</h1>
+            <p>Append-only transaction trail — entries cannot be edited or deleted</p>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="action-box" style="margin-bottom:25px;">
+            <button class="btn"           onclick="filterLogs('All', this)">All Transactions</button>
+            <button class="btn btn-secondary" onclick="filterLogs('RFQ', this)">RFQs</button>
+            <button class="btn btn-secondary" onclick="filterLogs('Approved', this)">Approved</button>
+            <button class="btn btn-secondary" onclick="filterLogs('Invoices', this)">Invoices</button>
+            <button class="btn btn-secondary" onclick="filterLogs('Vendors', this)">Vendors</button>
+        </div>
+
+        <!-- Immutability Notice -->
+        <div style="background:#1a1012; border-left:4px solid var(--accent-red); padding:15px;
+             margin-bottom:25px; border-radius:4px; font-size:13px; color:#fca5a5;">
+            <strong>Immutable Log Notice:</strong> All entries are written using append-only
+            INSERT operations. No UPDATE or DELETE is permitted at the database or application level.
+            Any modification attempt is blocked by Supabase Row Level Security policy.
+        </div>
+
+        <!-- Log Table — read-only, no edit/delete controls rendered -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:200px;">Timestamp</th>
+                    <th>Action Description</th>
+                    <th style="width:200px;">Actor</th>
+                    <th style="width:130px;">Status</th>
+                </tr>
+            </thead>
+            <tbody id="logTableBody">
+                <tr>
+                    <td colspan="4" style="text-align:center; color:var(--text-muted); padding:30px;">
+                        Loading audit logs...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

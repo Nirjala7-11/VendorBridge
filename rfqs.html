@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request For Quotation (RFQ) - VendorBridge</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">VendorBridge</div>
+        <ul class="nav-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="vendors.html">Vendors</a></li>
+            <li class="active"><a href="rfqs.html">RFQ's</a></li>
+            <li><a href="quotations.html">Quotations</a></li>
+            <li><a href="approvals.html">Approvals</a></li>
+            <li><a href="purchase_orders.html">Purchase Orders</a></li>
+            <li><a href="activity.html">Activity & Logs</a></li>
+            <li><a href="report.html">Reports & Analytics</a></li>
+            <li onclick="logout()" style="margin-top:50px; color:#ff5252; cursor:pointer; padding:12px 16px;">Logout</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>RFQ Composition & Drafting Room</h1>
+            <p>Publish market requirements or draft statements of work</p>
+        </div>
+
+        <!-- No onsubmit here — buttons call saveRFQ() directly -->
+        <div>
+            <div class="parallel-container">
+                <!-- LEFT: Classification -->
+                <div style="background-color:var(--bg-card); padding:25px; border-radius:8px;
+                     border:1px solid var(--border-color); display:flex; flex-direction:column; gap:15px;">
+                    <h3 style="color:var(--accent-blue); font-size:16px;">1. Primary Classification</h3>
+
+                    <div class="form-group">
+                        <label>RFQ Title</label>
+                        <input type="text" id="rfq-title" class="form-control"
+                            placeholder="e.g., Enterprise Server Rack Migration Cluster" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Sourcing Category</label>
+                        <select id="rfq-category" class="form-control">
+                            <option value="IT & Infra">IT & Infra</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Stationery">Stationery</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Response Deadline</label>
+                        <input type="date" id="rfq-deadline" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Scope of Work Description</label>
+                        <textarea id="rfq-details" class="form-control" rows="4"
+                            placeholder="Provide full technical parameters, environmental conditions, and testing limits..."></textarea>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Line Items + Vendor Routing -->
+                <div style="background-color:var(--bg-card); padding:25px; border-radius:8px;
+                     border:1px solid var(--border-color); display:flex; flex-direction:column; gap:15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="color:var(--accent-blue); font-size:16px; flex:1;">2. Required Line Items</h3>
+                        <button type="button" class="btn" style="padding:6px 12px; font-size:12px;"
+                            onclick="addRFQLineItem()">+ Add Line Item</button>
+                    </div>
+
+                    <div id="rfqLineItemsContainer"
+                        style="max-height:220px; overflow-y:auto; border:1px solid var(--border-color);
+                               padding:10px; border-radius:6px; background:#141416; display:flex;
+                               flex-direction:column; gap:8px;">
+                        <!-- Line items injected by app.js on DOMContentLoaded -->
+                    </div>
+
+                    <h3 style="color:var(--accent-blue); font-size:16px; margin-top:10px;">3. Vendor Routing</h3>
+                    <div class="form-group">
+                        <label>Assign Target Vendors</label>
+                        <input type="text" id="rfq-vendors" class="form-control"
+                            placeholder="e.g., TechCore, Infra Supplies">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Technical Blueprint Attachment</label>
+                        <input type="file" id="rfq-media" class="form-control" style="padding:7px;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-box" style="margin-top:30px; justify-content:flex-end;">
+                <button type="button" class="btn btn-secondary" onclick="saveRFQ('Draft')">Save as Draft</button>
+                <button type="button" class="btn btn-success" onclick="saveRFQ('Open')">Publish & Broadcast to Vendors</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- app.js DOMContentLoaded seeds the first line item automatically -->
+    <script src="app.js"></script>
+</body>
+</html>

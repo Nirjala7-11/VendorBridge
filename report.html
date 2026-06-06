@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - VendorBridge</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">VendorBridge</div>
+        <ul class="nav-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="vendors.html">Vendors</a></li>
+            <li><a href="rfqs.html">RFQ's</a></li>
+            <li><a href="quotations.html">Quotations</a></li>
+            <li><a href="approvals.html">Approvals</a></li>
+            <li><a href="purchase_orders.html">Purchase Orders</a></li>
+            <li><a href="activity.html">Activity & Logs</a></li>
+            <li class="active"><a href="report.html">Reports & Analytics</a></li>
+            <li onclick="logout()" style="margin-top:50px; color:#ff5252; cursor:pointer; padding:12px 16px;">Logout</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>Procurement Analytics</h1>
+            <p>Financial outlays and supplier performance metrics</p>
+        </div>
+
+        <!-- Filters -->
+        <div style="background-color:var(--bg-card); padding:20px; border-radius:8px;
+             border:1px solid var(--border-color); display:flex; gap:20px;
+             align-items:flex-end; margin-bottom:30px; flex-wrap:wrap;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Month</label>
+                <select id="reportMonth" class="form-control" style="width:160px;">
+                    <option value="06">June (Current)</option>
+                    <option value="05">May</option>
+                    <option value="04">April</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label>Year</label>
+                <select id="reportYear" class="form-control" style="width:120px;">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                </select>
+            </div>
+            <button class="btn" onclick="renderReportModule()">Generate Report</button>
+            <button class="btn btn-secondary" onclick="exportProcurementReport()">Export CSV</button>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="parallel-container" style="margin-bottom:30px;">
+            <div class="chart-container" style="margin-bottom:0;">
+                <h3 style="margin-bottom:15px; font-size:14px; text-transform:uppercase; color:var(--text-muted);">
+                    Spend by Category
+                </h3>
+                <div style="height:250px; position:relative;">
+                    <canvas id="spendCategoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container" style="margin-bottom:0;">
+                <h3 style="margin-bottom:15px; font-size:14px; text-transform:uppercase; color:var(--text-muted);">
+                    Monthly Outlay Trend
+                </h3>
+                <div style="height:250px; position:relative;">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restore Button -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <div>
+                <h3>Gross Outlay Trend</h3>
+                <p style="color:var(--text-muted); font-size:14px;">
+                    Approved spend vs pipeline volume comparison
+                </p>
+            </div>
+            <button class="btn" style="width:auto; background-color:var(--accent-blue);"
+                onclick="restoreOutlayTrendMatrix()">
+                Restore Chart
+            </button>
+        </div>
+
+        <!-- Top Vendors Table -->
+        <h2 style="margin-bottom:15px;">Top Vendors by Volume</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Vendor Name</th>
+                    <th>Total Spend</th>
+                    <th>Purchase Orders</th>
+                    <th>Delivery Accuracy</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>TechCore Ltd</strong></td>
+                    <td>$145,000.00</td>
+                    <td>8 POs</td>
+                    <td style="color:var(--accent-green); font-weight:bold;">98.4%</td>
+                </tr>
+                <tr>
+                    <td><strong>Infra Supplies</strong></td>
+                    <td>$62,500.00</td>
+                    <td>4 POs</td>
+                    <td style="color:var(--accent-green); font-weight:bold;">91.2%</td>
+                </tr>
+                <tr>
+                    <td><strong>Comfort Office Logistics</strong></td>
+                    <td>$22,000.00</td>
+                    <td>2 POs</td>
+                    <td style="color:var(--accent-orange); font-weight:bold;">86.5%</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <!-- app.js DOMContentLoaded calls renderReportModule() automatically -->
+    <script src="app.js"></script>
+</body>
+</html>

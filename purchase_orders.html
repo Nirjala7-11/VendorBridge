@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Orders - VendorBridge</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">VendorBridge</div>
+        <ul class="nav-links">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="vendors.html">Vendors</a></li>
+            <li><a href="rfqs.html">RFQ's</a></li>
+            <li><a href="quotations.html">Quotations</a></li>
+            <li><a href="approvals.html">Approvals</a></li>
+            <li class="active"><a href="purchase_orders.html">Purchase Orders</a></li>
+            <li><a href="activity.html">Activity & Logs</a></li>
+            <li><a href="report.html">Reports & Analytics</a></li>
+            <li onclick="logout()" style="margin-top:50px; color:#ff5252; cursor:pointer; padding:12px 16px;">Logout</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1>Purchase Order & Invoice</h1>
+                    <p>Auto-generated after approval workflow completion</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" style="width:auto; background-color:#333;"
+                        onclick="logAction('Downloaded PO-2026-002 as PDF', 'Success')">
+                        ⬇ Download PDF
+                    </button>
+                    <button class="btn" style="width:auto; background-color:#333;"
+                        onclick="logAction('Sent PO-2026-002 invoice via email to Infra Supplies', 'Success')">
+                        ✉ Email Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="text-align:left; background-color:#1a1a1a;">
+            <!-- PO Header -->
+            <div style="display:flex; justify-content:space-between; border-bottom:2px solid #333;
+                 padding-bottom:20px; margin-bottom:20px;">
+                <div>
+                    <h2 style="color:#4caf50;">VendorBridge Inc.</h2>
+                    <p style="color:#aaa; font-size:14px;">123 Procurement Way, Tech District</p>
+                </div>
+                <div style="text-align:right;">
+                    <h2>PO-2026-002</h2>
+                    <p style="color:#aaa; font-size:14px;">Date: June 06, 2026</p>
+                </div>
+            </div>
+
+            <!-- Vendor Info -->
+            <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+                <div>
+                    <h4 style="color:#aaa; margin-bottom:5px;">Bill To:</h4>
+                    <p><strong>Infra Supplies</strong></p>
+                    <p style="color:#aaa; font-size:14px;">Contact: sales@infrasupplies.com</p>
+                </div>
+                <div style="text-align:right;">
+                    <h4 style="color:#aaa; margin-bottom:5px;">Status:</h4>
+                    <span style="color:orange; font-weight:700; font-size:16px;">● Pending</span>
+                </div>
+            </div>
+
+            <!-- Line Items Table -->
+            <table class="data-table" style="margin-bottom:20px;">
+                <thead>
+                    <tr>
+                        <th>Item Description</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ergonomic Office Chairs</td>
+                        <td>25</td>
+                        <td>$300.00</td>
+                        <td>$7,500.00</td>
+                    </tr>
+                    <tr>
+                        <td>Standing Desks</td>
+                        <td>10</td>
+                        <td>$500.00</td>
+                        <td>$5,000.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div style="text-align:right; font-size:16px;">
+                <p style="margin-bottom:5px; color:#aaa;">Subtotal: $12,500.00</p>
+                <p style="margin-bottom:5px; color:#aaa;">Tax (10%): $1,250.00</p>
+                <h3 style="color:#4caf50; margin-top:10px; border-top:1px solid #333; padding-top:10px;">
+                    Grand Total: $13,750.00
+                </h3>
+            </div>
+        </div>
+
+        <!-- Navigation back -->
+        <div class="action-box" style="margin-top:25px;">
+            <button class="btn btn-secondary" onclick="routeTo('approvals.html')">← Back to Approvals</button>
+            <button class="btn btn-secondary" onclick="routeTo('activity.html')">View Audit Log</button>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
