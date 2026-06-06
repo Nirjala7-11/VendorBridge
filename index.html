@@ -10,18 +10,22 @@
 <body>
     <div class="auth-container">
 
-        <!-- LOGIN SECTION -->
+        <!-- ======================== LOGIN SECTION ======================== -->
         <div class="auth-box" id="login-section">
-            <h1 style="color: #3b82f6; margin-bottom: 5px;">VendorBridge</h1>
-            <p style="margin-bottom: 25px; color: #ccc;">Procurement Management System</p>
+            <h1 style="color:#3b82f6; margin-bottom:5px;">VendorBridge</h1>
+            <p style="margin-bottom:25px; color:#ccc;">Procurement Management System</p>
 
             <div class="photo-circle">
-                <img src="logo.png" alt="VendorBridge Logo" style="width:100%; height:100%; object-fit:cover;">
+                <img src="logo.png" alt="VendorBridge Logo"
+                    style="width:100%; height:100%; object-fit:cover;"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<svg width=50 height=50 viewBox=\'0 0 50 50\' fill=\'none\'><circle cx=25 cy=18 r=10 fill=\'#3b82f6\'/><path d=\'M5 45c0-11 9-18 20-18s20 7 20 18\' fill=\'#3b82f6\' opacity=\'.6\'/></svg>';">
             </div>
 
             <div class="form-group" style="text-align:left; margin-bottom:0;">
-                <input type="email" id="login-username" class="form-control" placeholder="Email Address" required style="margin-bottom:12px;">
-                <input type="password" id="login-password" class="form-control" placeholder="Password" required style="margin-bottom:0;">
+                <input type="email" id="login-username" class="form-control"
+                    placeholder="Email Address" required style="margin-bottom:12px;">
+                <input type="password" id="login-password" class="form-control"
+                    placeholder="Password" required style="margin-bottom:0;">
             </div>
 
             <button type="button" class="btn" onclick="handleLogin()"
@@ -29,18 +33,25 @@
                 Login
             </button>
 
-            <p class="toggle-link" onclick="toggleAuth('register')">Don't have an account? Register here</p>
-            <p class="toggle-link" style="color:var(--text-muted); font-size:13px; margin-top:8px;"
-                onclick="toggleAuth('forgot')">Forgot Password?</p>
+            <p class="toggle-link" onclick="toggleAuth('register')">
+                Don't have an account? Register here
+            </p>
+            <p class="toggle-link"
+                style="color:var(--text-muted); font-size:13px; margin-top:8px;"
+                onclick="toggleAuth('forgot')">
+                Forgot Password?
+            </p>
         </div>
 
-        <!-- REGISTER SECTION -->
-        <div class="auth-box" id="register-section" style="display: none; max-width: 620px;">
-            <h1 style="color: #3b82f6; margin-bottom: 5px;">VendorBridge</h1>
-            <p style="margin-bottom: 25px; color: #ccc;">Create Your Account</p>
+        <!-- ======================== REGISTER SECTION ======================== -->
+        <div class="auth-box" id="register-section" style="display:none; max-width:620px;">
+            <h1 style="color:#3b82f6; margin-bottom:5px;">VendorBridge</h1>
+            <p style="margin-bottom:25px; color:#ccc;">Create Your Account</p>
 
             <div class="photo-circle">
-                <img src="logo.png" alt="VendorBridge Logo" style="width:100%; height:100%; object-fit:cover;">
+                <img src="logo.png" alt="VendorBridge Logo"
+                    style="width:100%; height:100%; object-fit:cover;"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<svg width=50 height=50 viewBox=\'0 0 50 50\' fill=\'none\'><circle cx=25 cy=18 r=10 fill=\'#3b82f6\'/><path d=\'M5 45c0-11 9-18 20-18s20 7 20 18\' fill=\'#3b82f6\' opacity=\'.6\'/></svg>';">
             </div>
 
             <div class="form-grid">
@@ -54,36 +65,42 @@
                     <option value="Procurement Officer">Procurement Officer</option>
                     <option value="Vendor">Vendor</option>
                 </select>
-                <input type="text" id="reg-country" placeholder="Country" required>
-                <input type="password" id="reg-password" placeholder="Password" required>
-                <input type="password" id="reg-confirm-password" placeholder="Confirm Password" required>
+                <input type="text"     id="reg-country"           placeholder="Country"          required>
+                <input type="password" id="reg-password"          placeholder="Password (min 6 chars)" required>
+                <input type="password" id="reg-confirm-password"  placeholder="Confirm Password" required>
             </div>
 
             <textarea id="reg-additional" rows="3"
                 placeholder="Additional Information (optional)"
                 style="width:100%; padding:12px; margin:12px 0 0; border-radius:6px;
-                       border:1px solid #333; background:#121212; color:white; resize:vertical; font-size:14px;">
-            </textarea>
+                       border:1px solid #333; background:#121212; color:white;
+                       resize:vertical; font-size:14px;"></textarea>
 
             <button type="button" class="btn" onclick="handleRegister()"
                 style="width:100%; justify-content:center; margin-top:18px; padding:14px;">
                 Create Account
             </button>
 
-            <!-- FORGOT PASSWORD SECTION -->
+            <p class="toggle-link" onclick="toggleAuth('login')">
+                Already have an account? Back to Login
+            </p>
+        </div>
+
+        <!-- ======================== FORGOT PASSWORD SECTION ======================== -->
         <div class="auth-box" id="forgot-section" style="display:none;">
             <h1 style="color:#3b82f6; margin-bottom:5px;">VendorBridge</h1>
             <p style="margin-bottom:25px; color:#ccc;">Reset Your Password</p>
 
             <div class="photo-circle">
                 <img src="logo.png" alt="VendorBridge Logo"
-                    style="width:100%; height:100%; object-fit:cover;">
+                    style="width:100%; height:100%; object-fit:cover;"
+                    onerror="this.style.display='none'; this.parentElement.innerHTML='<svg width=50 height=50 viewBox=\'0 0 50 50\' fill=\'none\'><circle cx=25 cy=18 r=10 fill=\'#3b82f6\'/><path d=\'M5 45c0-11 9-18 20-18s20 7 20 18\' fill=\'#3b82f6\' opacity=\'.6\'/></svg>';">
             </div>
 
-            <!-- STEP 1: Enter Email -->
+            <!-- STEP 1 — Enter Email -->
             <div id="forgot-step-1">
                 <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px; text-align:left;">
-                    Enter your registered email address. We'll send you a 6-digit verification code.
+                    Enter your registered email address. We'll generate a 6-digit verification code.
                 </p>
                 <input type="email" id="forgot-email" class="form-control"
                     placeholder="Registered Email Address"
@@ -95,37 +112,41 @@
                 </button>
             </div>
 
-            <!-- STEP 2: Enter OTP -->
+            <!-- STEP 2 — Enter OTP -->
             <div id="forgot-step-2" style="display:none;">
-                <p style="color:var(--text-muted); font-size:13px; margin-bottom:8px; text-align:left;">
-                    A 6-digit code was sent to <strong id="forgot-email-display"
-                    style="color:var(--accent-blue);"></strong>
+                <p style="color:var(--text-muted); font-size:13px; margin-bottom:6px; text-align:left;">
+                    A 6-digit code was sent to
+                    <strong id="forgot-email-display" style="color:var(--accent-blue);"></strong>
                 </p>
                 <p style="color:var(--text-muted); font-size:12px; margin-bottom:20px; text-align:left;">
-                    Code expires in <span id="otp-timer" style="color:var(--accent-orange); font-weight:bold;">05:00</span>
+                    Code expires in
+                    <span id="otp-timer" style="color:var(--accent-orange); font-weight:bold;">05:00</span>
                 </p>
                 <input type="text" id="forgot-otp" class="form-control"
                     placeholder="Enter 6-digit code"
                     maxlength="6"
                     style="width:100%; margin-bottom:15px; letter-spacing:8px;
-                           font-size:20px; text-align:center; font-weight:bold;">
+                           font-size:22px; text-align:center; font-weight:bold;">
                 <button type="button" class="btn"
                     style="width:100%; justify-content:center; padding:14px;"
                     onclick="verifyOTP()">
                     Verify Code
                 </button>
-                <p style="color:var(--text-muted); font-size:13px; margin-top:15px; cursor:pointer;"
+                <p style="color:var(--text-muted); font-size:13px; margin-top:15px;
+                    cursor:pointer; text-align:center;"
                     onclick="sendOTP(true)">
                     Didn't receive it?
                     <span style="color:var(--accent-blue);">Resend Code</span>
                 </p>
             </div>
 
-            <!-- STEP 3: New Password -->
+            <!-- STEP 3 — Set New Password -->
             <div id="forgot-step-3" style="display:none;">
-                <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px; text-align:left;">
+                <div style="background:#0d2010; border-left:3px solid var(--accent-green);
+                     padding:12px; border-radius:4px; margin-bottom:20px; font-size:13px;
+                     color:#6ee7b7; text-align:left;">
                     Identity verified. Set your new password below.
-                </p>
+                </div>
                 <input type="password" id="forgot-new-password" class="form-control"
                     placeholder="New Password (min 6 characters)"
                     style="width:100%; margin-bottom:12px;">
@@ -139,12 +160,9 @@
                 </button>
             </div>
 
-            <p class="toggle-link"
-                style="margin-top:20px;"
-                onclick="toggleAuth('login')">← Back to Login</p>
-        </div>
-
-            <p class="toggle-link" onclick="toggleAuth('login')">Already have an account? Back to Login</p>
+            <p class="toggle-link" style="margin-top:20px;" onclick="toggleAuth('login')">
+                ← Back to Login
+            </p>
         </div>
 
     </div>
