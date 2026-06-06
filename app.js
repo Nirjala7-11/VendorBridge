@@ -1,8 +1,13 @@
 const SUPABASE_URL = 'https://obcslpgrfkjsiqsmnegl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_jVeWA30bIzvr6bkLUnGiQA_n6HAwr7i';
+// NOTE: In production, never expose keys in source. Use server-side env vars.
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ---------------------------------------------------------------------------
+// 2. SESSION / AUTH HELPERS
+// ---------------------------------------------------------------------------
 
 function getSession() {
     try {
@@ -19,13 +24,14 @@ function clearSession() {
     sessionStorage.removeItem('vb_session');
 }
 
+/** Redirect to login if no active session (call on every protected page load). */
 function requireAuth() {
     const session = getSession();
     if (!session) {
         window.location.href = 'index.html';
         return null;
     }
-    
+    // Populate welcome message on dashboard
     const welcomeEl = document.getElementById('welcomeMessage');
     if (welcomeEl) {
         welcomeEl.textContent = `Welcome back, ${session.firstname} 👋`;
@@ -33,6 +39,11 @@ function requireAuth() {
     return session;
 }
 
+/**
+ * Appends one immutable entry to the audit_logs table.
+ * @param {string} action  - Human-readable description of what happened.
+ * @param {string} status  - e.g. 'Success', 'Failed', 'Pending', 'Approved', 'Rejected'
+ */
 async function logAction(action, status = 'Success') {
     const session = getSession();
     const actor = session
@@ -43,27 +54,38 @@ async function logAction(action, status = 'Success') {
         action_description: action,
         actor_profile:      actor,
         status:             status,
+        // created_at is set server-side by Supabase default (now()); never sent from client.
     };
 
     const { error } = await db.from('audit_logs').insert([entry]);
 
     if (error) {
+        // Log to console only — never surface internal errors to end-user in prod.
         console.error('[AuditLog] Insert failed:', error.message);
     }
 }
 
-function toggleAuth(view) {
-    const loginSection    = document.getElementById('login-section');
-    const registerSection = document.getElementById('register-section');
-    if (!loginSection || !registerSection) return;
+// ---------------------------------------------------------------------------
+// 4. AUTHENTICATION
+// ---------------------------------------------------------------------------
 
-    if (view === 'register') {
-        loginSection.style.display    = 'none';
-        registerSection.style.display = 'block';
-    } else {
-        loginSection.style.display    = 'block';
-        registerSection.style.display = 'none';
-    }
+function toggleAuth(view) {
+    const sections = ['login-section', 'register-section', 'forgot-section'];
+    sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+
+    const target = document.getElementById(
+        view === 'register' ? 'register-section' :
+        view === 'forgot'   ? 'forgot-section'   :
+        view == 'login'     ? 'login-section'     :
+        null
+    );
+    if (target) target.style.display = 'block';
+
+    // Reset forgot password to step 1 whenever it's opened
+    if (view === 'forgot') resetForgotSteps();
 }
 
 async function handleLogin() {
@@ -74,12 +96,13 @@ async function handleLogin() {
         alert('Please enter both username and email/password.');
         return;
     }
-    
+
+    // Username is stored as email in the users table for simplicity.
     const { data, error } = await db
         .from('users')
         .select('*')
         .eq('email', username)
-        .eq('password_hash', password)
+        .eq('password_hash', password) // In production use proper hashing (bcrypt etc.)
         .single();
 
     if (error || !data) {
@@ -117,6 +140,7 @@ async function handleRegister() {
         return;
     }
 
+    // Check if email already exists
     const { data: existing } = await db
         .from('users')
         .select('id')
@@ -136,7 +160,7 @@ async function handleRegister() {
         role,
         country,
         additional_info: additional,
-        password_hash: password,
+        password_hash: password, // Placeholder — implement proper auth in prod
         status: 'Active'
     }]).select().single();
 
@@ -158,10 +182,182 @@ async function logout() {
     clearSession();
     window.location.href = 'index.html';
 }
+// ---------------------------------------------------------------------------
+// 4b. FORGOT PASSWORD FLOW
+// ---------------------------------------------------------------------------
+
+let otpTimerInterval = null;
+let generatedOTP     = null;
+let otpExpiry        = null;
+let forgotEmail      = null;
+
+function resetForgotSteps() {
+    document.getElementById('forgot-step-1').style.display = 'block';
+    document.getElementById('forgot-step-2').style.display = 'none';
+    document.getElementById('forgot-step-3').style.display = 'none';
+    document.getElementById('forgot-email').value          = '';
+    document.getElementById('forgot-otp').value            = '';
+    document.getElementById('forgot-new-password').value   = '';
+    document.getElementById('forgot-confirm-password').value = '';
+    clearInterval(otpTimerInterval);
+    generatedOTP = null;
+    otpExpiry    = null;
+    forgotEmail  = null;
+}
+
+async function sendOTP(isResend = false) {
+    const emailInput = document.getElementById('forgot-email');
+    const email      = (forgotEmail || emailInput?.value.trim()).toLowerCase();
+
+    if (!email) {
+        alert('Please enter your registered email address.');
+        return;
+    }
+
+    // Check user exists
+    const { data, error } = await db
+        .from('users')
+        .select('id, firstname')
+        .eq('email', email)
+        .single();
+
+    if (error || !data) {
+        alert('No account found with that email address.');
+        return;
+    }
+
+    forgotEmail = email;
+
+    // Generate a 6-digit OTP
+    generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    otpExpiry    = Date.now() + 5 * 60 * 1000; // 5 minutes from now
+
+    // Store OTP in password_resets table
+    await db.from('password_resets').upsert([{
+        email,
+        otp:        generatedOTP,
+        expires_at: new Date(otpExpiry).toISOString(),
+        used:       false
+    }], { onConflict: 'email' });
+
+    await logAction(`Password reset OTP requested for: ${email}`, 'Pending');
+
+    // In production, send via email API (SendGrid, Resend, etc.)
+    // For hackathon demo, show the OTP in an alert:
+    alert(`[DEMO MODE] Your verification code is: ${generatedOTP}\n\nIn production this would be sent to ${email}`);
+
+    // Show step 2
+    document.getElementById('forgot-step-1').style.display = 'none';
+    document.getElementById('forgot-step-2').style.display = 'block';
+
+    const displayEl = document.getElementById('forgot-email-display');
+    if (displayEl) displayEl.textContent = email;
+
+    // Start countdown timer
+    clearInterval(otpTimerInterval);
+    startOTPTimer();
+}
+
+function startOTPTimer() {
+    const timerEl = document.getElementById('otp-timer');
+    otpTimerInterval = setInterval(() => {
+        const remaining = otpExpiry - Date.now();
+        if (remaining <= 0) {
+            clearInterval(otpTimerInterval);
+            if (timerEl) timerEl.textContent = 'Expired';
+            generatedOTP = null;
+            return;
+        }
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        if (timerEl) {
+            timerEl.textContent =
+                `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+    }, 1000);
+}
+
+async function verifyOTP() {
+    const entered = document.getElementById('forgot-otp')?.value.trim();
+
+    if (!entered || entered.length !== 6) {
+        alert('Please enter the complete 6-digit code.');
+        return;
+    }
+
+    if (!generatedOTP || Date.now() > otpExpiry) {
+        alert('Your code has expired. Please request a new one.');
+        document.getElementById('forgot-step-2').style.display = 'none';
+        document.getElementById('forgot-step-1').style.display = 'block';
+        return;
+    }
+
+    if (entered !== generatedOTP) {
+        alert('Incorrect code. Please try again.');
+        document.getElementById('forgot-otp').value = '';
+        return;
+    }
+
+    // Mark OTP as used in DB
+    await db.from('password_resets')
+        .update({ used: true })
+        .eq('email', forgotEmail);
+
+    clearInterval(otpTimerInterval);
+    await logAction(`OTP verified for password reset: ${forgotEmail}`, 'Success');
+
+    // Advance to step 3
+    document.getElementById('forgot-step-2').style.display = 'none';
+    document.getElementById('forgot-step-3').style.display = 'block';
+}
+
+async function resetPassword() {
+    const newPass     = document.getElementById('forgot-new-password')?.value;
+    const confirmPass = document.getElementById('forgot-confirm-password')?.value;
+
+    if (!newPass || !confirmPass) {
+        alert('Please fill in both password fields.');
+        return;
+    }
+    if (newPass.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+    }
+    if (newPass !== confirmPass) {
+        alert('Passwords do not match.');
+        return;
+    }
+
+    const { error } = await db
+        .from('users')
+        .update({ password_hash: newPass })
+        .eq('email', forgotEmail);
+
+    if (error) {
+        alert('Failed to update password: ' + error.message);
+        return;
+    }
+
+    // Clean up reset record
+    await db.from('password_resets').delete().eq('email', forgotEmail);
+    await logAction(`Password successfully reset for: ${forgotEmail}`, 'Success');
+
+    alert('Password updated successfully! Please log in with your new password.');
+    resetForgotSteps();
+    toggleAuth('login');
+}
+
+// ---------------------------------------------------------------------------
+// 5. NAVIGATION UTILITY
+// ---------------------------------------------------------------------------
 
 function routeTo(page) {
     window.location.href = page;
 }
+
+// ---------------------------------------------------------------------------
+// 6. VENDOR MANAGEMENT
+// ---------------------------------------------------------------------------
 
 let vendorFilterState = 'All';
 
@@ -251,6 +447,10 @@ function filterVendors(filter) {
     loadVendors(filter);
 }
 
+// ---------------------------------------------------------------------------
+// 7. RFQ MODULE
+// ---------------------------------------------------------------------------
+
 let rfqLineItemCount = 0;
 
 function addRFQLineItem() {
@@ -325,6 +525,10 @@ async function saveRFQ(statusValue) {
     if (statusValue === 'Open') routeTo('quotations.html');
 }
 
+// ---------------------------------------------------------------------------
+// 8. QUOTATIONS MODULE
+// ---------------------------------------------------------------------------
+
 function calculateQuoteTotals() {
     let subtotal = 0;
     document.querySelectorAll('#quoteItemTableBody tr').forEach(row => {
@@ -379,6 +583,10 @@ async function submitQuotation(statusValue) {
     if (statusValue !== 'Draft') routeTo('approvals.html');
 }
 
+// ---------------------------------------------------------------------------
+// 9. APPROVALS MODULE
+// ---------------------------------------------------------------------------
+
 async function processApprovalStage(decision, approverRole) {
     const remarks = document.getElementById('approvalRemarks')?.value.trim();
 
@@ -413,6 +621,11 @@ async function processApprovalStage(decision, approverRole) {
         routeTo('rfqs.html');
     }
 }
+
+// ---------------------------------------------------------------------------
+// 10. ACTIVITY & AUDIT LOGS MODULE
+// ---------------------------------------------------------------------------
+// READ-ONLY display. No edit/delete controls are rendered or available.
 
 let currentLogFilter = 'All';
 
@@ -479,6 +692,7 @@ async function renderActivityModule(filter) {
 }
 
 function filterLogs(filter, btn) {
+    // Swap active button styles
     document.querySelectorAll('.action-box .btn').forEach(b => b.classList.add('btn-secondary'));
     if (btn) btn.classList.remove('btn-secondary');
     renderActivityModule(filter);
@@ -494,6 +708,10 @@ function filterBtnLabel(filter) {
     };
     return map[filter] || filter;
 }
+
+// ---------------------------------------------------------------------------
+// 11. REPORTS & ANALYTICS MODULE
+// ---------------------------------------------------------------------------
 
 let spendChart, trendChartInstance, dashTrendChart;
 
@@ -667,6 +885,11 @@ function exportProcurementReport() {
     logAction(`Procurement report exported for ${month}/${year}`, 'Success');
 }
 
+// ---------------------------------------------------------------------------
+// 12. UTILITY HELPERS
+// ---------------------------------------------------------------------------
+
+/** Escape HTML to prevent XSS when rendering DB content. */
 function escHtml(str) {
     if (str == null) return '—';
     return String(str)
@@ -677,6 +900,7 @@ function escHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+/** Map a status string to a CSS color variable. */
 function statusColor(status) {
     const map = {
         'Active':   'var(--accent-green)',
@@ -691,6 +915,7 @@ function statusColor(status) {
     return map[status] || 'var(--text-muted)';
 }
 
+/** Format an ISO timestamp for display. */
 function formatTimestamp(iso) {
     if (!iso) return '—';
     try {
@@ -703,14 +928,20 @@ function formatTimestamp(iso) {
     } catch { return iso; }
 }
 
+// ---------------------------------------------------------------------------
+// 13. PAGE BOOTSTRAP — auto-run on every page
+// ---------------------------------------------------------------------------
+
 document.addEventListener('DOMContentLoaded', () => {
     const page = window.location.pathname.split('/').pop();
 
-
+    // Index/login page is always accessible
     if (page === 'index.html' || page === '') return;
 
+    // All other pages require an active session
     requireAuth();
 
+    // Page-specific initializations
     switch (page) {
         case 'dashboard.html':
             renderDashboardTrendChart();
@@ -721,11 +952,11 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
 
         case 'rfqs.html':
-            addRFQLineItem();
+            addRFQLineItem(); // Seed first line item
             break;
 
         case 'quotations.html':
-            calculateQuoteTotals();
+            calculateQuoteTotals(); // Set initial totals
             break;
 
         case 'activity.html':
