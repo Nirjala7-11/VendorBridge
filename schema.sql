@@ -85,6 +85,15 @@ create table public.audit_logs (
     created_at          timestamptz not null default now()
 );
 
+-- Password resets table for OTP flow
+create table if not exists public.password_resets (
+    id          bigint generated always as identity primary key,
+    email       text not null unique,
+    otp         text not null,
+    expires_at  timestamptz not null,
+    used        boolean not null default false,
+    created_at  timestamptz not null default now()
+);
 -- ---------------------------------------------------------------------------
 -- STEP 3: ENABLE ROW LEVEL SECURITY
 -- ---------------------------------------------------------------------------
@@ -94,7 +103,7 @@ alter table public.rfqs        enable row level security;
 alter table public.quotations  enable row level security;
 alter table public.approvals   enable row level security;
 alter table public.audit_logs  enable row level security;
-
+alter table public.password_resets enable row level security;
 -- ---------------------------------------------------------------------------
 -- STEP 4: RLS POLICIES
 -- ---------------------------------------------------------------------------
@@ -120,6 +129,10 @@ create policy "open_approvals"
     on public.approvals for all to anon, authenticated
     using (true) with check (true);
 
+create policy "open_password_resets"
+    on public.password_resets for all to anon, authenticated
+    using (true) with check (true);
+    
 -- audit_logs: INSERT and SELECT only — no UPDATE, no DELETE policy = blocked by default
 create policy "audit_logs_insert_only"
     on public.audit_logs for insert to anon, authenticated
