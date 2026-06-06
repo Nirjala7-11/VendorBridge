@@ -71,10 +71,6 @@ body { background-color: var(--bg-dark); color: var(--text-main); display: flex;
 .pipeline-step.completed .step-dot { background-color: var(--accent-green); color: #fff; }
 .pipeline-step.active p { color: var(--text-main); font-weight: bold; }
 
-/* ==========================================================================
-   Authentication Components (Login & Registration Page Layouts - Blue Theme)
-   ========================================================================== */
-
 .auth-container {
     width: 100vw;
     height: 100vh;
@@ -93,7 +89,7 @@ body { background-color: var(--bg-dark); color: var(--text-main); display: flex;
 .auth-box {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-top: 4px solid var(--accent-blue); /* Theming shifted to blue accents */
+    border-top: 4px solid var(--accent-blue);
     border-radius: 8px;
     padding: 40px;
     width: 100%;
