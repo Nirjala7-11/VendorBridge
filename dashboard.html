@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - VendorBridge</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <nav class="sidebar">
@@ -16,36 +19,42 @@
             <li><a href="approvals.html">Approvals</a></li>
             <li><a href="purchase_orders.html">Purchase Orders</a></li>
             <li><a href="activity.html">Activity & Logs</a></li>
-            <li onclick="logout()" style="margin-top: 50px; color: #ff5252;">Logout</li>
+            <li><a href="report.html">Reports & Analytics</a></li>
+            <li onclick="logout()" style="margin-top:50px; color:#ff5252; cursor:pointer; padding:12px 16px;">Logout</li>
         </ul>
     </nav>
 
     <main class="main-content">
         <div class="header">
             <h1 id="welcomeMessage">Dashboard</h1>
-            <p>Welcome back! Here is your Today's Overview.</p>
+            <p>Procurement Lifecycle Monitor Overview</p>
         </div>
 
         <div class="dashboard-cards">
-            <div class="card">
-                <h3>12</h3>
-                <p>Active RFQ's</p>
+            <div class="card" onclick="routeTo('rfqs.html')">
+                <h3>12</h3><p>Active RFQ's</p>
             </div>
-            <div class="card">
-                <h3>5</h3>
-                <p>Pending Approvals</p>
+            <div class="card" onclick="routeTo('approvals.html')">
+                <h3>5</h3><p>Pending Approvals</p>
             </div>
-            <div class="card">
-                <h3>$ 2.3L</h3>
-                <p>PO's this month</p>
+            <div class="card" onclick="routeTo('report.html')">
+                <h3>$230,000</h3><p>PO's this Month</p>
             </div>
-            <div class="card">
-                <h3>3</h3>
-                <p>Active Vendors</p>
+            <div class="card" onclick="routeTo('vendors.html')">
+                <h3>3</h3><p>Active Vendors</p>
             </div>
         </div>
 
-        <div class="header">
+        <div class="chart-container">
+            <h3 style="margin-bottom:15px; font-size:16px; text-transform:uppercase; color:var(--text-muted);">
+                6-Month Purchasing Outlay Trend
+            </h3>
+            <div style="height:240px; position:relative;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="header" style="margin-top:40px;">
             <h2>Recent Purchase Orders</h2>
         </div>
         <table class="data-table">
@@ -59,19 +68,25 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>PO-2024-001</td>
+                    <td>PO-2026-001</td>
                     <td>TechCore Ltd</td>
-                    <td>$45,000</td>
-                    <td style="color: #4caf50;">Approved</td>
+                    <td>$45,000.00</td>
+                    <td style="color:#4caf50; font-weight:600;">Approved</td>
                 </tr>
                 <tr>
-                    <td>PO-2024-002</td>
+                    <td>PO-2026-002</td>
                     <td>Infra Supplies</td>
-                    <td>$12,500</td>
-                    <td style="color: orange;">Pending</td>
+                    <td>$12,500.00</td>
+                    <td style="color:orange; font-weight:600;">Pending</td>
                 </tr>
             </tbody>
         </table>
+
+        <div class="action-box" style="margin-top:25px; border-top:1px solid var(--border-color); padding-top:25px;">
+            <button class="btn" onclick="routeTo('rfqs.html')">+ Create New RFQ</button>
+            <button class="btn btn-secondary" onclick="routeTo('vendors.html')">+ Register New Vendor</button>
+            <button class="btn btn-secondary" style="background-color:#4b5563;" onclick="routeTo('activity.html')">View Audit Logs</button>
+        </div>
     </main>
     <script src="app.js"></script>
 </body>
