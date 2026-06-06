@@ -225,6 +225,11 @@ This project provided hands-on experience in:
 * AI Procurement Assistant
 
 ---
+## Live Link
+https://nirjala7-11.github.io/VendorBridge/
+
+## Youtube Submission Video Link
+https://youtu.be/HZNVUOwVUGE
 
 ## Hackathon Submission
 
