@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - VendorBridge</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">VendorBridge</div>
+        <ul class="nav-links">
+            <li class="active"><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="vendors.html">Vendors</a></li>
+            <li><a href="rfqs.html">RFQ's</a></li>
+            <li><a href="quotations.html">Quotations</a></li>
+            <li><a href="approvals.html">Approvals</a></li>
+            <li><a href="purchase_orders.html">Purchase Orders</a></li>
+            <li><a href="activity.html">Activity & Logs</a></li>
+            <li onclick="logout()" style="margin-top: 50px; color: #ff5252;">Logout</li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div class="header">
+            <h1 id="welcomeMessage">Dashboard</h1>
+            <p>Welcome back! Here is your Today's Overview.</p>
+        </div>
+
+        <div class="dashboard-cards">
+            <div class="card">
+                <h3>12</h3>
+                <p>Active RFQ's</p>
+            </div>
+            <div class="card">
+                <h3>5</h3>
+                <p>Pending Approvals</p>
+            </div>
+            <div class="card">
+                <h3>$ 2.3L</h3>
+                <p>PO's this month</p>
+            </div>
+            <div class="card">
+                <h3>3</h3>
+                <p>Active Vendors</p>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2>Recent Purchase Orders</h2>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>PO Number</th>
+                    <th>Vendor</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>PO-2024-001</td>
+                    <td>TechCore Ltd</td>
+                    <td>$45,000</td>
+                    <td style="color: #4caf50;">Approved</td>
+                </tr>
+                <tr>
+                    <td>PO-2024-002</td>
+                    <td>Infra Supplies</td>
+                    <td>$12,500</td>
+                    <td style="color: orange;">Pending</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
