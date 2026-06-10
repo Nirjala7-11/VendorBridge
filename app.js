@@ -4,6 +4,7 @@ const SUPABASE_KEY = 'sb_publishable_jVeWA30bIzvr6bkLUnGiQA_n6HAwr7i';
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+
 function getSession() {
     try {
         const raw = sessionStorage.getItem('vb_session');
@@ -27,7 +28,7 @@ function requireAuth() {
     }
     const welcomeEl = document.getElementById('welcomeMessage');
     if (welcomeEl) {
-        welcomeEl.textContent = `Welcome back, ${session.firstname} 👋`;
+        welcomeEl.textContent = `Welcome back, ${session.firstname} ${session.lastname}!`;
     }
     return session;
 }
@@ -47,14 +48,14 @@ async function logAction(action, status = 'Success') {
     if (error) console.error('[AuditLog] Insert failed:', error.message);
 }
 
+
 function toggleAuth(view) {
-    // Hide all three sections first
+    
     ['login-section', 'register-section', 'forgot-section'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
 
-    // Show the requested one
     const targetId =
         view === 'register' ? 'register-section' :
         view === 'forgot'   ? 'forgot-section'   :
@@ -63,7 +64,6 @@ function toggleAuth(view) {
     const target = document.getElementById(targetId);
     if (target) target.style.display = 'block';
 
-    // Always reset forgot flow when opening it
     if (view === 'forgot') resetForgotSteps();
 }
 
@@ -76,7 +76,6 @@ async function handleLogin() {
         return;
     }
 
-    // Use array result (no .single()) so missing rows return [] not an error
     const { data, error } = await db
         .from('users')
         .select('*')
@@ -113,7 +112,6 @@ async function handleRegister() {
     const password    = document.getElementById('reg-password')?.value;
     const confirmPass = document.getElementById('reg-confirm-password')?.value;
 
-    // Field validation
     if (!firstname || !lastname || !email || !phone || !country || !password) {
         alert('Please fill in all required fields.');
         return;
@@ -131,7 +129,6 @@ async function handleRegister() {
         return;
     }
 
-    // Check duplicate email — use array NOT .single() to avoid false errors
     const { data: existingList, error: checkError } = await db
         .from('users')
         .select('id')
@@ -149,7 +146,6 @@ async function handleRegister() {
         return;
     }
 
-    // Insert new user
     const { data, error } = await db.from('users').insert([{
         firstname,
         lastname,
@@ -169,9 +165,8 @@ async function handleRegister() {
     }
 
     await logAction(`New user registered: ${firstname} ${lastname} as ${role}`, 'Success');
-    alert(`Registration successful! Welcome, ${firstname}.\n\nPlease log in with your credentials.`);
+    alert(`Registration successful! Welcome, ${firstname} ${lastname}.\n\nPlease log in with your credentials.`);
 
-    // Clear register form
     ['reg-firstname','reg-lastname','reg-email','reg-phone','reg-country',
      'reg-password','reg-confirm-password','reg-additional'].forEach(id => {
         const el = document.getElementById(id);
@@ -196,7 +191,6 @@ let generatedOTP     = null;
 let otpExpiry        = null;
 let forgotUserEmail  = null;
 
-/** Reset the forgot password UI back to step 1 */
 function resetForgotSteps() {
     const show = id => { const el = document.getElementById(id); if (el) el.style.display = 'block'; };
     const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none';  };
@@ -217,37 +211,40 @@ function resetForgotSteps() {
     forgotUserEmail = null;
 }
 
-/** STEP 1 — Verify email exists, generate and display OTP */
 async function sendOTP(isResend = false) {
-    const emailInput  = document.getElementById('forgot-email');
-    const email       = (forgotUserEmail || emailInput?.value.trim()).toLowerCase();
+    const emailInput = document.getElementById('forgot-email');
+    const email      = (forgotUserEmail || emailInput?.value.trim()).toLowerCase();
 
     if (!email) {
         alert('Please enter your registered email address.');
         return;
     }
 
-    // Use array (not .single()) to avoid false errors when email not found
-    const { data, error } = await db
+    const sendBtn = document.querySelector('#forgot-step-1 .btn');
+    if (sendBtn) { sendBtn.textContent = 'Sending...'; sendBtn.disabled = true; }
+
+    const { data: users, error: lookupError } = await db
         .from('users')
         .select('id, firstname')
         .eq('email', email)
         .limit(1);
 
-    if (error) {
+    if (lookupError) {
         alert('A network error occurred. Please try again.');
-        console.error('[sendOTP] DB error:', error.message);
+        console.error('[sendOTP] Lookup error:', lookupError.message);
+        if (sendBtn) { sendBtn.textContent = 'Send Verification Code'; sendBtn.disabled = false; }
         return;
     }
 
-    if (!data || data.length === 0) {
+    if (!users || users.length === 0) {
         alert('No account found with that email address. Please check and try again.');
+        if (sendBtn) { sendBtn.textContent = 'Send Verification Code'; sendBtn.disabled = false; }
         return;
     }
 
+    const user      = users[0];
     forgotUserEmail = email;
 
-    // Generate 6-digit OTP
     generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
     otpExpiry    = Date.now() + 5 * 60 * 1000; // 5 minutes
 
@@ -258,24 +255,49 @@ async function sendOTP(isResend = false) {
         used:       false
     }], { onConflict: 'email' });
 
+    try {
+        const fnUrl = `${SUPABASE_URL}/functions/v1/send-otp`;
+        const res   = await fetch(fnUrl, {
+            method:  'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email,
+                otp:       generatedOTP,
+                firstname: user.firstname
+            })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+            console.error('[sendOTP] Email delivery failed:', result);
+            if (sendBtn) { sendBtn.textContent = 'Send Verification Code'; sendBtn.disabled = false; }
+            alert('Failed to send email. Please try again or contact support.');
+            return;
+        }
+
+    } catch (emailErr) {
+        console.error('[sendOTP] Edge function error:', emailErr);
+        if (sendBtn) { sendBtn.textContent = 'Send Verification Code'; sendBtn.disabled = false; }
+        alert('Failed to send email. Please check your connection and try again.');
+        return;
+    }
+
     await logAction(
         `Password reset OTP ${isResend ? 'resent' : 'requested'} for: ${email}`,
         'Pending'
     );
 
-    
-    const demoVal = document.getElementById('otp-demo-value');
-    if (demoBox) demoBox.style.display = 'block';
-    if (demoVal) demoVal.textContent = generatedOTP;
+    if (sendBtn) { sendBtn.textContent = 'Send Verification Code'; sendBtn.disabled = false; }
 
-    // Move to step 2
     document.getElementById('forgot-step-1').style.display = 'none';
     document.getElementById('forgot-step-2').style.display = 'block';
 
     const displayEl = document.getElementById('forgot-email-display');
     if (displayEl) displayEl.textContent = email;
 
-    // Start countdown
     clearInterval(otpTimerInterval);
     startOTPTimer();
 }
@@ -309,21 +331,48 @@ async function verifyOTP() {
         return;
     }
 
-    if (!generatedOTP || Date.now() > otpExpiry) {
-        alert('Your code has expired. Please request a new one.');
-        document.getElementById('forgot-step-2').style.display = 'none';
-        document.getElementById('forgot-step-1').style.display = 'block';
-        forgotUserEmail = null;
+    if (!forgotUserEmail) {
+        alert('Session lost. Please start again.');
+        resetForgotSteps();
         return;
     }
 
-    if (entered !== generatedOTP) {
-        alert('Incorrect code. Please check and try again.');
+    const verifyBtn = document.querySelector('#forgot-step-2 .btn');
+    if (verifyBtn) { verifyBtn.textContent = 'Verifying...'; verifyBtn.disabled = true; }
+
+    const { data: records, error } = await db
+        .from('password_resets')
+        .select('otp, expires_at, used')
+        .eq('email', forgotUserEmail)
+        .eq('used', false)
+        .limit(1);
+
+    if (verifyBtn) { verifyBtn.textContent = 'Verify Code'; verifyBtn.disabled = false; }
+
+    if (error || !records || records.length === 0) {
+        alert('No active reset code found. Please request a new one.');
+        document.getElementById('forgot-step-2').style.display = 'none';
+        document.getElementById('forgot-step-1').style.display = 'block';
+        clearInterval(otpTimerInterval);
+        return;
+    }
+
+    const record = records[0];
+
+    if (new Date(record.expires_at) < new Date()) {
+        alert('Your code has expired. Please request a new one.');
+        document.getElementById('forgot-step-2').style.display = 'none';
+        document.getElementById('forgot-step-1').style.display = 'block';
+        clearInterval(otpTimerInterval);
+        forgotUserEmail = null;
+        return;
+    }
+    if (entered !== record.otp) {
+        alert('Incorrect code. Please check your email and try again.');
         document.getElementById('forgot-otp').value = '';
         return;
     }
 
-    // Mark OTP as used
     await db.from('password_resets')
         .update({ used: true })
         .eq('email', forgotUserEmail);
@@ -331,7 +380,6 @@ async function verifyOTP() {
     clearInterval(otpTimerInterval);
     await logAction(`OTP verified successfully for: ${forgotUserEmail}`, 'Success');
 
-    // Move to step 3
     document.getElementById('forgot-step-2').style.display = 'none';
     document.getElementById('forgot-step-3').style.display = 'block';
 }
@@ -576,10 +624,10 @@ async function processApprovalStage(decision, approverRole) {
     );
 
     if (decision === 'Approved') {
-        alert('✅ Authorized. Purchase Order generation initiated.');
+        alert('Authorized. Purchase Order generation initiated.');
         routeTo('purchase_orders.html');
     } else {
-        alert('❌ Rejected and bounced back to procurement pipeline.');
+        alert('Rejected and bounced back to procurement pipeline.');
         routeTo('rfqs.html');
     }
 }
