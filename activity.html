@@ -36,14 +36,6 @@
             <button class="btn btn-secondary" onclick="filterLogs('Invoices', this)">Invoices</button>
             <button class="btn btn-secondary" onclick="filterLogs('Vendors', this)">Vendors</button>
         </div>
-
-        <div style="background:#1a1012; border-left:4px solid var(--accent-red); padding:15px;
-             margin-bottom:25px; border-radius:4px; font-size:13px; color:#fca5a5;">
-            <strong>Immutable Log Notice:</strong> All entries are written using append-only
-            INSERT operations. No UPDATE or DELETE is permitted at the database or application level.
-            Any modification attempt is blocked by Supabase Row Level Security policy.
-        </div>
-
         <table class="data-table">
             <thead>
                 <tr>
