@@ -9,6 +9,7 @@
     --text-main:      #f3f4f6;
     --text-muted:     #9ca3af;
     --border-color:   #2d2d34;
+
     --step-inactive:  #374151;
     --step-active:    #3b82f6;
     --step-done:      #10b981;
@@ -26,7 +27,6 @@ body {
     display: flex;
     min-height: 100vh;
 }
-
 .sidebar {
     width: 260px;
     background-color: var(--sidebar-bg);
@@ -69,7 +69,6 @@ body {
     color: var(--text-main);
     border-left: 4px solid var(--accent-blue);
 }
-
 .main-content {
     flex: 1;
     padding: 40px;
@@ -88,7 +87,6 @@ body {
 .header p {
     color: var(--text-muted);
 }
-
 .dashboard-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -121,7 +119,6 @@ body {
     color: var(--text-muted);
     font-size: 14px;
 }
-
 .action-box {
     display: flex;
     gap: 15px;
@@ -149,7 +146,6 @@ body {
 .btn-secondary     { background-color: #374151; }
 .btn-success       { background-color: var(--accent-green); }
 .btn-danger        { background-color: var(--accent-red); }
-
 .form-group {
     margin-bottom: 15px;
     display: flex;
@@ -177,7 +173,6 @@ body {
 .form-control:focus {
     border-color: var(--accent-blue);
 }
-
 .parallel-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -213,9 +208,6 @@ body {
     background-color: #141416;
 }
 
-/* ---------------------------------------------------------------------------
-   CHART CONTAINERS
---------------------------------------------------------------------------- */
 .chart-container {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -274,6 +266,7 @@ body {
 .pipeline-step.active p            { color: var(--text-main); font-weight: bold; }
 .pipeline-step p                   { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
+
 .auth-container {
     width: 100vw;
     min-height: 100vh;
@@ -281,6 +274,7 @@ body {
     justify-content: center;
     align-items: center;
     background-color: var(--bg-dark);
+    /* Subtle grid pattern for depth */
     background-image:
         linear-gradient(var(--border-color) 1px, transparent 1px),
         linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
@@ -388,7 +382,6 @@ body {
     margin-bottom: 5px;
 }
 
-/* Password fields in register span full width for clarity */
 .form-grid input[type="password"] {
     grid-column: span 1;
 }
@@ -439,26 +432,62 @@ body {
 }
 
 #forgot-otp {
-    letter-spacing: 10px;
-    font-size: 24px;
+    letter-spacing: 12px;
+    font-size: 28px;
     text-align: center;
     font-weight: 700;
-    color: var(--accent-blue);
+    color: var(--text-main);
     background-color: #0d1117;
     border: 2px solid var(--border-color);
     border-radius: 8px;
-    padding: 16px 14px;
+    padding: 18px 14px;
     width: 100%;
     margin-bottom: 15px;
     transition: border-color 0.2s, box-shadow 0.2s;
-    /* Remove number input arrows if type switches */
+    appearance: textfield;
     -moz-appearance: textfield;
 }
 
 #forgot-otp:focus {
     border-color: var(--accent-blue);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
     outline: none;
+}
+
+#forgot-otp::placeholder {
+    letter-spacing: 2px;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+
+.email-sent-notice {
+    background: #0d1f38;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-align: left;
+}
+
+.email-sent-notice .mail-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.email-sent-notice p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.email-sent-notice strong {
+    color: var(--text-main);
 }
 
 #otp-timer {
@@ -509,7 +538,6 @@ body {
     }
 }
 
-/* Mobile */
 @media (max-width: 640px) {
     body { flex-direction: column; }
 
@@ -544,7 +572,6 @@ body {
     }
 }
 
-/* Small phones */
 @media (max-width: 400px) {
     .dashboard-cards {
         grid-template-columns: 1fr;
