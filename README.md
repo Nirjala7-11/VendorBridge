@@ -229,7 +229,7 @@ This project provided hands-on experience in:
 https://nirjala7-11.github.io/VendorBridge/
 
 ## Youtube Submission Video Link
-https://youtu.be/HZNVUOwVUGE
+(https://youtu.be/UGBaS3FSmQE)
 
 ## Hackathon Submission
 
