@@ -9,8 +9,6 @@
 </head>
 <body>
     <div class="auth-container">
-
-        <!-- ======================== LOGIN SECTION ======================== -->
         <div class="auth-box" id="login-section">
             <h1 style="color:#3b82f6; margin-bottom:5px;">VendorBridge</h1>
             <p style="margin-bottom:25px; color:#ccc;">Procurement Management System</p>
@@ -43,7 +41,6 @@
             </p>
         </div>
 
-        <!-- ======================== REGISTER SECTION ======================== -->
         <div class="auth-box" id="register-section" style="display:none; max-width:620px;">
             <h1 style="color:#3b82f6; margin-bottom:5px;">VendorBridge</h1>
             <p style="margin-bottom:25px; color:#ccc;">Create Your Account</p>
@@ -86,7 +83,6 @@
             </p>
         </div>
 
-        <!-- ======================== FORGOT PASSWORD SECTION ======================== -->
         <div class="auth-box" id="forgot-section" style="display:none;">
             <h1 style="color:#3b82f6; margin-bottom:5px;">VendorBridge</h1>
             <p style="margin-bottom:25px; color:#ccc;">Reset Your Password</p>
@@ -97,7 +93,6 @@
                     onerror="this.style.display='none'; this.parentElement.innerHTML='<svg width=50 height=50 viewBox=\'0 0 50 50\' fill=\'none\'><circle cx=25 cy=18 r=10 fill=\'#3b82f6\'/><path d=\'M5 45c0-11 9-18 20-18s20 7 20 18\' fill=\'#3b82f6\' opacity=\'.6\'/></svg>';">
             </div>
 
-            <!-- STEP 1 — Enter Email -->
             <div id="forgot-step-1">
                 <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px; text-align:left;">
                     Enter your registered email address. We'll generate a 6-digit verification code.
@@ -112,12 +107,29 @@
                 </button>
             </div>
 
-            <!-- STEP 2 — Enter OTP -->
             <div id="forgot-step-2" style="display:none;">
                 <p style="color:var(--text-muted); font-size:13px; margin-bottom:6px; text-align:left;">
-                    A 6-digit code was sent to
+                    A 6-digit code was generated for
                     <strong id="forgot-email-display" style="color:var(--accent-blue);"></strong>
                 </p>
+
+                <div id="otp-demo-box" style="display:none; background:#0a1628;
+                     border:1.5px dashed var(--accent-blue); border-radius:8px;
+                     padding:14px 16px; margin-bottom:16px; text-align:center;">
+                    <p style="font-size:11px; color:var(--text-muted); text-transform:uppercase;
+                        letter-spacing:1px; margin-bottom:8px;">
+                        Demo Mode — Your OTP Code
+                    </p>
+                    <p id="otp-demo-value" style="font-size:36px; font-weight:800;
+                        color:var(--accent-blue); letter-spacing:10px; font-family:monospace;
+                        margin:4px 0;">
+                        ------
+                    </p>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">
+                        In production this would be emailed to you
+                    </p>
+                </div>
+
                 <p style="color:var(--text-muted); font-size:12px; margin-bottom:20px; text-align:left;">
                     Code expires in
                     <span id="otp-timer" style="color:var(--accent-orange); font-weight:bold;">05:00</span>
@@ -140,7 +152,6 @@
                 </p>
             </div>
 
-            <!-- STEP 3 — Set New Password -->
             <div id="forgot-step-3" style="display:none;">
                 <div style="background:#0d2010; border-left:3px solid var(--accent-green);
                      padding:12px; border-radius:4px; margin-bottom:20px; font-size:13px;
@@ -161,7 +172,7 @@
             </div>
 
             <p class="toggle-link" style="margin-top:20px;" onclick="toggleAuth('login')">
-                ← Back to Login
+                Back to Login
             </p>
         </div>
 
