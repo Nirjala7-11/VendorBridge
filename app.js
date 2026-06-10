@@ -66,6 +66,7 @@ function toggleAuth(view) {
     // Always reset forgot flow when opening it
     if (view === 'forgot') resetForgotSteps();
 }
+
 async function handleLogin() {
     const email    = document.getElementById('login-username')?.value.trim().toLowerCase();
     const password = document.getElementById('login-password')?.value;
@@ -250,7 +251,6 @@ async function sendOTP(isResend = false) {
     generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
     otpExpiry    = Date.now() + 5 * 60 * 1000; // 5 minutes
 
-    // Persist OTP to password_resets table (upsert — one row per email)
     await db.from('password_resets').upsert([{
         email,
         otp:        generatedOTP,
@@ -263,8 +263,10 @@ async function sendOTP(isResend = false) {
         'Pending'
     );
 
-    alert(`Your verification code is:\n\n${generatedOTP}\n\n(Demo mode — in production this would be emailed to ${email})`);
-    // ──────────────────────────────────────────────────────────────────────
+    
+    const demoVal = document.getElementById('otp-demo-value');
+    if (demoBox) demoBox.style.display = 'block';
+    if (demoVal) demoVal.textContent = generatedOTP;
 
     // Move to step 2
     document.getElementById('forgot-step-1').style.display = 'none';
@@ -278,7 +280,6 @@ async function sendOTP(isResend = false) {
     startOTPTimer();
 }
 
-/** Countdown timer for OTP expiry */
 function startOTPTimer() {
     const timerEl = document.getElementById('otp-timer');
     otpTimerInterval = setInterval(() => {
@@ -300,7 +301,6 @@ function startOTPTimer() {
     }, 1000);
 }
 
-/** STEP 2 — Validate entered OTP */
 async function verifyOTP() {
     const entered = document.getElementById('forgot-otp')?.value.trim();
 
@@ -336,7 +336,6 @@ async function verifyOTP() {
     document.getElementById('forgot-step-3').style.display = 'block';
 }
 
-/** STEP 3 — Update password in DB */
 async function resetPassword() {
     const newPass     = document.getElementById('forgot-new-password')?.value;
     const confirmPass = document.getElementById('forgot-confirm-password')?.value;
@@ -368,7 +367,7 @@ async function resetPassword() {
     await db.from('password_resets').delete().eq('email', forgotUserEmail);
     await logAction(`Password successfully reset for: ${forgotUserEmail}`, 'Success');
 
-    alert(' Password updated successfully!\n\nPlease log in with your new password.');
+    alert('Password updated successfully!\n\nPlease log in with your new password.');
     resetForgotSteps();
     toggleAuth('login');
 }
